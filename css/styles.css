@@ -1,0 +1,32 @@
+.gameField {
+/*  border: 1px solid #000000; */    
+}
+
+input {
+  width: 100px;
+  text-align: center;
+}
+
+.fl {
+  float: left;
+}
+.fr {
+  float: right;
+}
+.clear {
+  clear: both;
+}
+
+.n {
+  border-top: 1px solid #000000;
+}
+.w {
+  border-left: 1px solid #000000;
+}
+.s {
+  border-bottom: 1px solid #000000;
+}
+.o {
+  border-right: 1px solid #000000;
+}
+
