@@ -296,12 +296,47 @@
           }
         );
     },
+    /**
+     * @return {Object}  {free:{Number},set:{Number},bind:{Number}}
+     */
+    getFieldStatus: function getFieldStatus() {
+        var self = this;
+        var result = {free:0,set:0,bind:0};
+        var cells = $('input.sudokucell');
+        cells.each(function() {
+            if(Number($(this).val()) > 0 && Number($(this).val()) < 10) {
+                if($(this).attr('readonly')) {
+                    result.bind++;
+                } else {
+                    result.set++;
+                }
+            } else if (Number($(this).val()) == 0) {
+                result.free++;
+            }
+          }
+        );
+        return result;
+    },        
     solve: function solve() {
         var self = this;
-        self.solveSingles();
-        //@todo add more logic here
-        self.solveHiddenSingles();
-        //self.solveUniquePairInBlock();
+        var fieldStatus = self.getFieldStatus();
+        var keepSolving = true;
+        while (keepSolving) {
+            self.solveSingles();
+            if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
+                fieldStatus = self.getFieldStatus();
+                continue;
+            }
+            self.solveHiddenSingles();
+            if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
+                fieldStatus = self.getFieldStatus();
+                continue;
+            }
+            //@todo add more logic here            
+            //self.solveUniquePairInBlock();
+            keepSolving = false;
+        }
+        
     },
     /**
      * finds and sets "single" values
@@ -321,10 +356,10 @@
                 var dataPlace = self.findCellDataById($(this).attr('rel'));
                 if(dataPlace) {
                     self.fieldSet[dataPlace.row][dataPlace.col].val = $(this).val();
-                }                
+                }
               }
             );
-        }        
+        }
     },
     /**
      * find placeholders that have multiple values but one value is unique for this placehohder
@@ -380,15 +415,12 @@
                                     self.fieldSet[dataPlace.row][dataPlace.col].val = $(curField).val();
                                 }
                             }
-//self.log('x4',possibilities,$(curField).val(),$(curField).attr('placeholder'));                            
-//throw 'stop';                            
                         });
                     }
                 }
               }
             );
-        }                
-        
+        }
     },
     /**
      * if two placeholders dave the same pair of values, we can remove this values from the other placeholders in this block
