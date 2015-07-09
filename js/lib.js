@@ -247,15 +247,39 @@
       $.each(data, function(rowIndex, r) {
          $.each(r, function(colIndex, c) {
              if(colIndex == id) {                   
-                 found = {
-                   row: rowIndex, 
-                   col: colIndex
-                 };                  
+                found = {
+                    row: Number(rowIndex), 
+                    col: Number(colIndex)
+                };                  
              }
          });
       }); 
-    return found;
+        return found;
     },
+    /**       
+     * @param {Number} setid
+     * @return [{row:Y, col:X},..]
+     */
+    findCellDataBySetId: function findCellDataBySetId(setid) {
+      var self = this;          
+      var data = self.fieldSet;
+      var found;
+      $.each(data, function(rowIndex, r) {
+         $.each(r, function(colIndex, c) {             
+             if(c.sets.indexOf(setid) > -1) {                 
+                 if(found === undefined) {
+                    found = [];
+                 }                 
+                 found.push({
+                    row: Number(rowIndex), 
+                    col: Number(colIndex),
+                    set: setid
+                 });
+             }
+         });
+      }); 
+      return found;
+    },        
     bindValues: function bindValues() {
         var self = this;
         var cells = $('input.sudokucell');
@@ -276,7 +300,7 @@
         var self = this;
         self.solveSingles();
         //@todo add more logic here
-        //self.solveHiddenSingles();
+        self.solveHiddenSingles();
         //self.solveUniquePairInBlock();
     },
     /**
@@ -288,9 +312,8 @@
         while (somethingSet) {
             somethingSet = false;
             var cells = $('input.sudokucell');
-            cells.each(function() {
-                if(Number($(this).val()) == 0 && $(this).attr('placeholder').length == 1) {
-                    self.log($(this).attr('placeholder').length);
+            cells.each(function findAndSetSingles() {
+                if(Number($(this).val()) == 0 && $(this).attr('placeholder').length == 1) {                    
                     $(this).val($(this).attr('placeholder'));
                     self.cellValueChanged(this);
                     somethingSet = true;
@@ -308,6 +331,64 @@
      * this is our value
      */
     solveHiddenSingles: function solveHiddenSingles() {
+        var self = this;
+        var somethingSet = true;
+        while (somethingSet) {
+            somethingSet = false;
+            var cells = $('input.sudokucell'); //all cells to check
+            cells.each(function findAndSetHiddenSingles() {
+                var curField = this;
+                //if cell is not set and has more than one possible value, check it
+                if(Number($(curField).val()) == 0 && $(curField).attr('placeholder').length > 1) {
+                    var placeholders = $(curField).attr('placeholder');
+                    var dataPlace = self.findCellDataById($(curField).attr('rel'));
+                    var data;
+                    if(dataPlace) { //find data
+                        data = self.fieldSet[dataPlace.row][dataPlace.col];
+                    }
+                    if(data) {
+                        //loop through each set, to find the unique values
+                        $.each(data.sets, function(setIndex, setId) {
+                            var possibilities = JSON.parse('['+placeholders+']');
+                            var setData = self.findCellDataBySetId(setId); //data of the cell in the same set
+                            $.each(setData, function(i, cellData) {
+                                //skip if possibilities is already empty
+                                if(possibilities.length < 1) {
+                                  return;
+                                }
+                                //skip self 
+                                if(cellData.col == dataPlace.col){
+                                    return;
+                                }
+                                var inputs  = $('div#cell_'+cellData.col+' input');
+                                var input = inputs[0];
+                                    //skip filled cells
+                                    if($(input).val() > 0 && $(input).val() < 10) {
+                                        return;
+                                    }
+                                    var possibleValues = JSON.parse('['+$(input).attr('placeholder')+']');
+                                    possibilities = possibilities.filter( function( el ) {
+                                        return possibleValues.indexOf( el ) < 0;
+                                    });
+                            });
+                            //we checked this set. If only one possible value left, use it.
+                            if(possibilities.length == 1) {
+                                $(curField).val(possibilities[0]);
+                                self.cellValueChanged(curField);
+                                somethingSet = true;                                                
+                                if(dataPlace) {
+                                    self.fieldSet[dataPlace.row][dataPlace.col].val = $(curField).val();
+                                }
+                            }
+//self.log('x4',possibilities,$(curField).val(),$(curField).attr('placeholder'));                            
+//throw 'stop';                            
+                        });
+                    }
+                }
+              }
+            );
+        }                
+        
     },
     /**
      * if two placeholders dave the same pair of values, we can remove this values from the other placeholders in this block
