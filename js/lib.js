@@ -129,7 +129,12 @@
       /**
        * @var [{1:fld,..},..]
        */
-      fieldSet: [],           
+      fieldSet: [],
+      /**
+       * @var {fieldSet: [], gameField: DOM}
+       */
+      backUp: [{fieldSet: null, gameField: null}],
+      bruteForceLoops: 0,    
       /**
        * builds the gaming field
        */
@@ -141,7 +146,7 @@
              var row = $("<tr/>");
              $.each(r, function(colIndex, c) { 
                  var el = $("<div/>");                                
-                 if(c.val === 0) { // just empty feld
+                 if(Number(c.val) == 0) { // just empty feld
                     var possibleValues = self.getPossibleValuesForCell(colIndex);
                     var input = $("<input/>").attr('type', 'number')
                                           .attr('placeholder',possibleValues)                                              
@@ -151,7 +156,7 @@
                     input.change(function() {self.cellValueChanged(this);});
                     el.attr('id','cell_'+colIndex);                     
                     el.append(input);                                                              
-                 } else if(c.val > 0 && c.val < 10) { //pre defined values
+                 } else if(Number(c.val) > 0 && Number(c.val) < 10) { //pre defined values
                      var input = $("<input/>").attr('type', 'number')
                                             .val(c.val)
                                             .addClass('form-control sudokucell')
@@ -178,7 +183,7 @@
       },
       getPossibleValuesForCell: function getPossibleValuesForCell(id) {
           var self = this;
-          var possibleValues = [1,2,3,4,5,6,7,8,9];          
+          var possibleValues = [1,2,3,4,5,6,7,8,9];
           //get cell data
           var dataPlace = self.findCellDataById(id);
           if(dataPlace) {
@@ -204,6 +209,7 @@
       },
       cellValueChanged: function cellValueChanged(el) {
           var self = this;
+          var ok = true;
           //remove errors if any
           $(el).parent().removeClass('has-error');          
           //update cell value          
@@ -228,13 +234,15 @@
                                    (Number($(input).val()) === Number($(el).val()))) {
                                     $(el).parent().addClass('has-error');
                                     $(input).parent().addClass('has-error');
+                                    ok = false;
                                 }
                             });                                               
                          }                   
                      });
                   });                             
               }                            
-          }                               
+          }
+          return ok;
       },
     /**       
      * @param {Number} id
@@ -316,17 +324,40 @@
           }
         );
         return result;
-    },        
-    solve: function solve() {
+    },
+    /**
+     * save game field
+     */
+    saveGame: function saveGame() {
+      var self = this;
+      var backUp = {};
+      //backUp.gameField = $('#gameField').clone(true, true);      
+      backUp.fieldSet  = (JSON.parse(JSON.stringify(self.fieldSet)));
+      //self.backUp.push(backUp);
+      return backUp;
+    },
+    /**
+     * restore game field
+     */
+    restoreGame: function restoreGame(backUp) {
+        var self = this;
+        //$('#gameField').html(backUp.gameField);        
+        self.fieldSet = (JSON.parse(JSON.stringify(backUp.fieldSet))); 
+        $('#gameField').html('');
+        self.buildGameField();
+    },      
+    solve: function solve(useBruteForce) {
         var self = this;
         var fieldStatus = self.getFieldStatus();
         var keepSolving = true;
         while (keepSolving) {
+            self.msg('singles');
             self.solveSingles();
             if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
                 fieldStatus = self.getFieldStatus();
                 continue;
             }
+            self.msg('hidden singles');
             self.solveHiddenSingles();
             if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
                 fieldStatus = self.getFieldStatus();
@@ -334,6 +365,45 @@
             }
             //@todo add more logic here            
             //self.solveUniquePairInBlock();
+            
+            //and kind of brute force
+            if(useBruteForce && fieldStatus.free > 0 && (fieldStatus.bind+fieldStatus.set >= 17)) {
+                var backUp = self.saveGame();
+                self.restoreGame(backUp); //save and reset
+                var cells = $('input.sudokucell');
+                cells.each(function () {                    
+                    if(Number($(this).val()) == 0 && $(this).attr('placeholder').length > 1) {
+                        self.bruteForceLoops++;
+                        self.msg('brute force cell ['+$(this).attr('rel')+'] #'+self.bruteForceLoops);
+                        
+                        //no more brute force!
+                        if(self.bruteForceLoops > 1000) {                            
+                            throw 'To much brute force!';
+                        }
+                        
+                        var possibilities = JSON.parse('['+$(this).attr('placeholder')+']');
+                        for(var i = 0 ; i < possibilities.length ; i++) {
+                            $(this).val(possibilities[i]);
+                            if(self.cellValueChanged(this)) { //to catch doubles...
+                                var dataPlace = self.findCellDataById($(this).attr('rel'));
+                                if(dataPlace) {
+                                    self.fieldSet[dataPlace.row][dataPlace.col].val = $(this).val();
+                                }
+                                self.solve(useBruteForce);
+                                if(self.getFieldStatus().free < 1) { //Solution found?
+                                    return false;
+                                }
+                            } //restore
+                            $(this).val('');
+                            self.cellValueChanged(this);                            
+                            self.restoreGame(backUp);
+                        }
+                    }
+                });
+                if(self.getFieldStatus().free > 0) {
+                    self.restoreGame(backUp);
+                }
+            }
             keepSolving = false;
         }
         
@@ -433,8 +503,8 @@
         cells.each(function() { 
             $(this).parent().removeClass('has-error');
             if(Number($(this).val()) > 0 && $(this).attr('readonly') == undefined) {
-                $(this).val('');                
-            }                                 
+                $(this).val('');
+            }
             self.cellValueChanged(this);
           }
         );
@@ -448,8 +518,13 @@
              global.console.log(arguments);
         }
         return this;
-      }        
-    };
+    },
+    msg: function msg(msg) {
+        var self = this;
+        //$('#indicator').html(msg);
+        self.log(msg);
+    }
+  };
     
     /**
      * @var fSet FieldSet [[{val,sets},..],..]
