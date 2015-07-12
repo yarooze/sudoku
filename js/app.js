@@ -86,7 +86,7 @@ $(function() {
         ];    
     
     
-    $uko = $udoku(myField2);  //(myField);
+    $uko = $udoku();  //(myField);
     $uko.buildGameField();
     
     $('#bind').click(function() {
@@ -103,7 +103,7 @@ $(function() {
     $('#reset').click(function() {
       $uko.resetField();
     });    
-    $('#restart').click(function() {
+    $('#restart').click(function() {        
         if(confirm('Are you sure?')) {
             window.location.href = window.location.href;
         }      

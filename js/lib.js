@@ -131,28 +131,36 @@
        */
       fieldSet: [],
       /**
-       * @var {fieldSet: [], gameField: DOM}
+       *
        */
-      backUp: [{fieldSet: null, gameField: null}],
-      bruteForceLoops: 0,    
+      bruteForceLoops: 0,
+      /**
+       * @var {Object}   {cellId:[val1,val2,..]}
+       */
+      bruteForceValuesChecked: {},
+      bruteForceLog: [],
       /**
        * builds the gaming field
        */
       buildGameField: function buildGameField() {
           var self = this;          
-          var data = self.fieldSet;           
-          var table = $("<table/>").addClass('gameField');          
-          $.each(data, function(rowIndex, r) {                              
+          var data = self.fieldSet;
+          var table = $("<table/>").addClass('gameField');
+          $.each(data, function(rowIndex, r) {
              var row = $("<tr/>");
              $.each(r, function(colIndex, c) { 
                  var el = $("<div/>");                                
                  if(Number(c.val) == 0) { // just empty feld
                     var possibleValues = self.getPossibleValuesForCell(colIndex);
-                    var input = $("<input/>").attr('type', 'number')
-                                          .attr('placeholder',possibleValues)                                              
-                                        .addClass('form-control sudokucell')
-                                          .attr('rel', colIndex)
+                    var input = $("<input/>")
+                        .attr('type', 'number')
+                        .attr('placeholder',possibleValues)
+                        .addClass('form-control sudokucell')
+                        .attr('rel', colIndex)
                     ;
+                    for(var i in c.sets) {
+                        el.addClass('set_'+c.sets[i]);
+                    } 
                     input.change(function() {self.cellValueChanged(this);});
                     el.attr('id','cell_'+colIndex);                     
                     el.append(input);                                                              
@@ -179,6 +187,7 @@
           });
           
           $('#gameField').append(table);
+          self.fixPossibleValues();
           return this;
       },
       getPossibleValuesForCell: function getPossibleValuesForCell(id) {
@@ -191,27 +200,82 @@
               var CellSets = self.fieldSet[dataPlace.row][dataPlace.col].sets;
               for(var i=0; i < CellSets.length; i++) {
                   var CellSet = CellSets[i];
-                  var data = self.fieldSet;              
+                  var data = self.fieldSet;
                   $.each(data, function(rowIndex, r) {
                      $.each(r, function(colIndex, c) {
                          if(c.sets.indexOf(CellSet) > -1) {
-                             var index = possibleValues.indexOf(Number(c.val));                         
-                             if(index > -1) {                                               
+                             var index = possibleValues.indexOf(Number(c.val));
+                             if(index > -1) {
                                possibleValues.splice(index, 1);
                              }
-                         }                     
+                         }
                      });
-                  });                             
-              }                            
+                  });
+              }
           }
           
-          return possibleValues;
+        return possibleValues;
       },
+      /**
+       *
+       */
+      fixPossibleValues: function fixPossibleValues() {
+        var self = this;
+        var valuesFixed = 0;
+        //if two placeholders have the same pair of values, we can remove this values from the other placeholders in this block
+        var pairs = {}; //{setId:{cellId:placeHolder,..},..}  
+        var cells = $('input.sudokucell');
+        cells.each(function() {
+            var cell = this;
+            if(Number($(cell).val()) == 0 && $(cell).attr('placeholder').length == 3) {
+                var dataPlace = self.findCellDataById($(cell).attr('rel'));
+                if(dataPlace) {              
+                    var cellSets = self.fieldSet[dataPlace.row][dataPlace.col].sets;
+                    for(var i=0; i < cellSets.length; i++) {
+                        var cellSet = cellSets[i];
+                        if(pairs[cellSet] == undefined) {
+                            pairs[cellSet] = [];
+                        }
+                        pairs[cellSet][$(cell).attr('rel')] = $(cell).attr('placeholder');
+                    }
+                }
+                
+            }
+        });
+
+        //found some fields with two placeholders. Do the y have the pairs?
+        for(var set in pairs) {
+            //cellIds = Object.keys(pairs[set]);
+            if(pairs[set].length > 1) {
+                for(var cellId in pairs[set]) {
+                    //test if we have two equal pairs
+                    if(pairs[set].lastIndexOf(pairs[set][cellId]) > cellId) {
+                        var cellsToFix = $('.set_'+set+' input.sudokucell');
+                        cellsToFix.each(function() {
+                            var cellToFix = this;
+                            if($(cellToFix).attr('rel') in pairs[set]) {
+                                return;
+                            }
+                            //geit ids, we have to remove from the placeholders 
+                            var placeholders = JSON.parse('['+$(cellToFix).attr('placeholder')+']');
+                            var toRemove     = JSON.parse('['+pairs[set][cellId]+']');
+                            placeholders = placeholders.filter( function( el ) {
+                                return toRemove.indexOf( el ) < 0;
+                            });
+                            $(cellToFix).attr('placeholder',placeholders);
+                            valuesFixed++;
+                        });
+                    }   
+                }
+            }
+        }
+        return valuesFixed;
+      },        
       cellValueChanged: function cellValueChanged(el) {
           var self = this;
           var ok = true;
           //remove errors if any
-          $(el).parent().removeClass('has-error');          
+          $(el).parent().removeClass('has-error');
           //update cell value          
           var dataPlace = self.findCellDataById($(el).attr('rel'));       
           if(dataPlace) {
@@ -225,8 +289,7 @@
                      $.each(r, function(colIndex, c) {
                          if(c.sets.indexOf(CellSet) > -1) {                         
                            var possibleValues = self.getPossibleValuesForCell(colIndex);                         
-                           var inputs = $('div#cell_'+colIndex+' input');     
-                            $.each(inputs, function(index, input) {                            
+                           var input = $('div#cell_'+colIndex+' input')[0];     
                                 $(input).attr('placeholder',possibleValues);
                                 //@todo think about error removal
                                 if(0 < Number($(el).val()) &&
@@ -236,12 +299,12 @@
                                     $(input).parent().addClass('has-error');
                                     ok = false;
                                 }
-                            });                                               
-                         }                   
+                         }
                      });
-                  });                             
-              }                            
+                  });
+              }
           }
+          self.fixPossibleValues();
           return ok;
       },
     /**       
@@ -292,7 +355,7 @@
         var self = this;
         var cells = $('input.sudokucell');
         cells.each(function() {
-            var dataPlace = self.findCellDataById($(this).attr('rel'));            
+            var dataPlace = self.findCellDataById($(this).attr('rel'));
             if(dataPlace) {    
                 self.fieldSet[dataPlace.row][dataPlace.col].val = $(this).val();            
                 if(Number($(this).val()) > 0 && Number($(this).val()) < 10) {
@@ -304,12 +367,14 @@
           }
         );
     },
-    /**
+    /** 
+     * returns game field statisic
+     * 
      * @return {Object}  {free:{Number},set:{Number},bind:{Number}}
      */
     getFieldStatus: function getFieldStatus() {
         var self = this;
-        var result = {free:0,set:0,bind:0};
+        var result = {free:0,set:0,bind:0,err:0};
         var cells = $('input.sudokucell');
         cells.each(function() {
             if(Number($(this).val()) > 0 && Number($(this).val()) < 10) {
@@ -319,7 +384,11 @@
                     result.set++;
                 }
             } else if (Number($(this).val()) == 0) {
-                result.free++;
+                if($(this).attr('placeholder').length > 0) {
+                    result.free++;
+                } else {
+                    result.err++;
+                }
             }
           }
         );
@@ -347,66 +416,112 @@
         self.buildGameField();
     },      
     solve: function solve(useBruteForce) {
-        var self = this;
-        var fieldStatus = self.getFieldStatus();
-        var keepSolving = true;
-        while (keepSolving) {
-            self.msg('singles');
-            self.solveSingles();
-            if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
-                fieldStatus = self.getFieldStatus();
-                continue;
-            }
-            self.msg('hidden singles');
-            self.solveHiddenSingles();
-            if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
-                fieldStatus = self.getFieldStatus();
-                continue;
-            }
-            //@todo add more logic here            
-            //self.solveUniquePairInBlock();
-            
-            //and kind of brute force
-            if(useBruteForce && fieldStatus.free > 0 && (fieldStatus.bind+fieldStatus.set >= 17)) {
-                var backUp = self.saveGame();
-                self.restoreGame(backUp); //save and reset
-                var cells = $('input.sudokucell');
-                cells.each(function () {                    
-                    if(Number($(this).val()) == 0 && $(this).attr('placeholder').length > 1) {
-                        self.bruteForceLoops++;
-                        self.msg('brute force cell ['+$(this).attr('rel')+'] #'+self.bruteForceLoops);
-                        
-                        //no more brute force!
-                        if(self.bruteForceLoops > 1000) {                            
-                            throw 'To much brute force!';
-                        }
-                        
-                        var possibilities = JSON.parse('['+$(this).attr('placeholder')+']');
-                        for(var i = 0 ; i < possibilities.length ; i++) {
-                            $(this).val(possibilities[i]);
-                            if(self.cellValueChanged(this)) { //to catch doubles...
-                                var dataPlace = self.findCellDataById($(this).attr('rel'));
-                                if(dataPlace) {
-                                    self.fieldSet[dataPlace.row][dataPlace.col].val = $(this).val();
-                                }
-                                self.solve(useBruteForce);
-                                if(self.getFieldStatus().free < 1) { //Solution found?
-                                    return false;
-                                }
-                            } //restore
-                            $(this).val('');
-                            self.cellValueChanged(this);                            
-                            self.restoreGame(backUp);
-                        }
-                    }
-                });
-                if(self.getFieldStatus().free > 0) {
-                    self.restoreGame(backUp);
-                }
-            }
-            keepSolving = false;
+      var self = this;
+      var fieldStatus = self.getFieldStatus();
+      var keepSolving = true;
+      while (keepSolving) {
+
+        self.solveSingles();
+        if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
+            fieldStatus = self.getFieldStatus();
+            continue;
         }
-        
+
+        self.solveHiddenSingles();
+        if(fieldStatus.free > 0 && fieldStatus.free > self.getFieldStatus().free) {
+            fieldStatus = self.getFieldStatus();
+            continue;
+        }
+        //@todo add more logic here before we use brute force
+
+        //and kind of brute force
+        if(useBruteForce && fieldStatus.free > 0) {
+          self.bruteForceLoops = 0;
+          self.solveBruteForce();
+          alert('Done with brute force... '+self.bruteForceLoops+' loops.');
+        }
+        keepSolving = false;
+      }
+      return true;    
+    },
+    solveBruteForce: function solveBruteForce (savedGame) {
+      var self = this;
+      var fieldStatus = self.getFieldStatus();
+      if(fieldStatus.bind+fieldStatus.set < 17) {
+          alert('Set at least 17 cells before use brute force!');
+          throw 'stop';
+      }
+      savedGame  =  savedGame || self.saveGame(); 
+      //self.restoreGame(savedGame);
+      var cells = $('input.sudokucell');
+      $(cells).each(function () {
+        if(Number($(this).val()) == 0 && $(this).attr('placeholder').length > 0) {
+          var cell = this;
+          self.bruteForceLoops++;
+          //no more brute force!
+          if(self.bruteForceLoops > 500) {
+              throw 'To much brute force!';
+          }
+          self.log('brute force cell ['+$(cell).attr('rel')+'] #'+self.bruteForceLoops);
+          var possibilities = JSON.parse('['+$(this).attr('placeholder')+']');
+          for(var i = 0 ; i < possibilities.length ; i++) {
+            var cellSave = self.saveGame();
+            //self.restoreGame(cellSave);
+self.log('Seting '+$(cell).val()+' into '+$(cell).attr('rel'),possibilities,i);
+            //set value
+            if(self.setValue(cell, possibilities[i])) {
+              //solve 1 + 2
+              //self.solveSingles();
+              //self.solveHiddenSingles();
+              //self.solve();
+            }
+            if(self.getFieldStatus().err) {
+              //self.resetField();  //maybe keep this?
+              self.setValue(cell, '');
+              continue;                
+            }  
+//alert(possibilities[i]+':'+$(cell).attr('rel')+'['+$(this).attr('placeholder')+'] free'+self.getFieldStatus().free);
+            //if ok - save data and call recursion
+            if(!self.solveBruteForce()) {
+              //self.restoreGame(cellSave);
+              //self.resetField();
+              self.setValue(cell, '');
+              continue;
+            } else if (self.getFieldStatus().free < 1) { //Solution found?
+                  return false;
+            } else { //if not ok, reset value
+              //we had error with this placeholder - use another
+              //self.restoreGame(cellSave);
+              //self.resetField();
+              self.setValue(cell, '');
+            }
+          }
+          //if value was ok keep in and return false 
+          if($(cell).val()) {
+            //return false;
+          } else {
+self.log('None of the values were good. Go back to previous cell.['+$(cell).attr('rel')+']');
+            //self.restoreGame(savedGame);
+            return false;
+          }
+          //if value is empty - keep going
+        }
+      });
+      if (self.getFieldStatus().free < 1 && self.getFieldStatus().err < 1) {
+          return true; 
+      }
+    },
+    /**
+     * 
+     */
+    setValue: function setValue(cell, value) {
+      var self = this;
+      $(cell).val(value);
+      var dataPlace = self.findCellDataById($(cell).attr('rel'));
+      if(dataPlace) {
+        self.fieldSet[dataPlace.row][dataPlace.col].val = value;
+        return (self.cellValueChanged(cell) && self.getFieldStatus().err < 1);      
+      }
     },
     /**
      * finds and sets "single" values
@@ -492,11 +607,6 @@
             );
         }
     },
-    /**
-     * if two placeholders dave the same pair of values, we can remove this values from the other placeholders in this block
-     */
-    solveUniquePairInBlock: function solveUniquePairInBlock() {        
-    },        
     resetField: function resetField() {
         var self = this;
         var cells = $('input.sudokucell');
@@ -518,11 +628,6 @@
              global.console.log(arguments);
         }
         return this;
-    },
-    msg: function msg(msg) {
-        var self = this;
-        //$('#indicator').html(msg);
-        self.log(msg);
     }
   };
     
