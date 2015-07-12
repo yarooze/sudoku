@@ -438,6 +438,7 @@
         if(useBruteForce && fieldStatus.free > 0) {
           self.bruteForceLoops = 0;
           self.solveBruteForce();
+          self.solve();
           alert('Done with brute force... '+self.bruteForceLoops+' loops.');
         }
         keepSolving = false;
