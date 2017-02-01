@@ -217,7 +217,7 @@ $(function() {
             1001:{val:-1,sets:[]},1002:{val:-1,sets:[]},1003:{val:-1,sets:[]},
             1004:{val:-1,sets:[]},1005:{val:-1,sets:[]},1006:{val:-1,sets:[]},
             //moddle 
-            1007:{val:0,sets:[205,2010,2023],style:'w'},1008:{val:0,sets:[205,2011,2023],style:''},1009:{val:0,sets:[205,2012,2025],style:'o'},
+            1007:{val:0,sets:[205,2010,2023],style:'w'},1008:{val:0,sets:[205,2011,2023],style:''},1009:{val:0,sets:[205,2012,2023],style:'o'},
             1010:{val:0,sets:[205,2013,2024],style:'w'},1011:{val:0,sets:[205,2014,2024],style:''},1012:{val:0,sets:[205,2015,2024],style:'o'},
             1013:{val:0,sets:[205,2016,2025],style:'w'},1014:{val:0,sets:[205,2017,2025],style:''},1015:{val:0,sets:[205,2018,2025],style:'o'},
             // right  empty
@@ -257,8 +257,8 @@ $(function() {
             1310:{val:0,sets:[208,2013,2027],style:''},1311:{val:0,sets:[208,2014,2027],style:''},1312:{val:0,sets:[208,2015,2027],style:''},
             // buttom right  
             1313:{val:0,sets:[402,4010,4020, 208,2016],style:'w'},1314:{val:0,sets:[402,4011,4020, 208,2017],style:''},1315:{val:0,sets:[402,4012,4020, 208,2018],style:'o'},
-            1316:{val:0,sets:[402,4013,4021],style:'w'},1317:{val:0,sets:[402,4014,4021],style:''},1318:{val:0,sets:[402,4015,4020],style:'o'},
-            1319:{val:0,sets:[402,4016,4022],style:'w'},1320:{val:0,sets:[402,4017,4022],style:''},1321:{val:0,sets:[402,4018,4021],style:'o'}
+            1316:{val:0,sets:[402,4013,4021],style:'w'},1317:{val:0,sets:[402,4014,4021],style:''},1318:{val:0,sets:[402,4015,4021],style:'o'},
+            1319:{val:0,sets:[402,4016,4022],style:'w'},1320:{val:0,sets:[402,4017,4022],style:''},1321:{val:0,sets:[402,4018,4022],style:'o'}
         },
         
         { // buttom left 15 Row    Sets 30x, 40x (3) and 20x (9)
