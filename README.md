@@ -17,12 +17,12 @@ Planned:
 
 Supported fields:
 
-1. 3x3   
-2. 3x3x3 
+1. 3x3
+2. 3x3x3
+3. 5x3x3 - Samurai
 
 Planned:
-1. 5x3x3 - Samurai 
-2. Nonomino-Sudoku
+1. Nonomino-Sudoku
 
 You can make your own fields and add them into app.js.
 
