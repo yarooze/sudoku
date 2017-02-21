@@ -1,9 +1,16 @@
 ;var $uko;
 $(function() {
+    // Load catalogue
     $ukoCat = $udokuCatalogue();
+
+    // Load scanner
+    $ukoScan = SudokuScanner();
+
+    // Load solver
     $uko = $udoku($ukoCat.getFieldSetById("9x9"));  //(myField);
     $uko.buildGameField();
 
+    // Bind solver button
     $('#bind').click(function() {
       $uko.bindValues();
     });
@@ -41,6 +48,19 @@ $(function() {
         if(fieldSet) {
            $('#fieldSetData').val(JSON.stringify(fieldSet));
         }
+    });
+
+    // bind scanner buttons and field
+    $('#sukoPic').hide();
+    $('#loadImg').change(function(event) {
+        $('#sukoPic').show();
+        $ukoScan.loadImg(event);
+    });
+    $('#sharpen').click(function() {
+        $ukoScan.sharpen();
+    });
+    $('#analyzeBoard').click(function() {
+        $ukoScan.analyzeBoard();
     });
 
     $uko.log('started');

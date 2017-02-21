@@ -1,5 +1,5 @@
 /** Sudoku fields catalogue */
-;(function(global){
+;(function(global, _){
 
     /**
      *
@@ -46,7 +46,7 @@
         {
           id: "3x3",
           name: "3x3",
-          tags: ["active", "empty"],
+          tags: ["active", "empty", "3x3"],
           description: "set 3x3 for tests",
           fieldSet:
           //0 set 3x3 for tests
@@ -60,7 +60,7 @@
         {
           id: "9x9",
           name: "9x9",
-          tags: ["active", "empty"],
+          tags: ["active", "empty", "9x9", "forScanner"],
           description: "standard set 9x9",
           fieldSet:
            //1 set 3x3x3
@@ -105,7 +105,7 @@
         {
            id: "9x9_no_borders",
            name: "9x9 without borders",
-           tags: ["test", "empty"],
+           tags: ["test", "empty", "9x9"],
            description: "set 9x9 without borders (Example of the field with spaces)",
            fieldSet:
            //2 set 9x9 without borders (Example of the field with spaces)
@@ -150,7 +150,7 @@
         {
            id: "3x3_w_spaces",
            name: "3x3 with spaces",
-           tags: ["active", "empty"],
+           tags: ["active", "empty", "3x3"],
            description: "3x3 with spaces as design example",
            fieldSet:
             //3 3x3 with spaces
@@ -167,7 +167,7 @@
         {
            id: "gattai5",
            name: "Gattai5 / Samurai",
-           tags: ["active", "empty"],
+           tags: ["active", "empty", "gattai5", "forScanner"],
            description: "Gattai5 / Samurai",
            fieldSet:
             //
@@ -428,7 +428,7 @@
         {
            id: "9x9example1",
            name: "9x9 example 1",
-           tags: ["active"],
+           tags: ["active", "9x9"],
            description: "9x9 set with example sudoku - can be brute forced.",
            fieldSet:
         [ //example field 3x3x3 - can be brute forced
@@ -509,6 +509,28 @@
             var self = this;
 
             return self.fieldSets;
+        },
+        /**
+         * Returns field sets for given tags.
+         *
+         * @var {Array} tags
+         * @returns {Array}
+         */
+        getFieldSetsByTags: function getFieldSetsByTags(tags) {
+            var self = this;
+            var result = [];
+            if (!_.isArray(tags)  || _.isEmpty(tags)) {
+                return result;
+            }
+
+            for (var index in self.fieldSets) {
+                let spareTags = _.difference(tags,self.fieldSets[index].tags)
+                if (spareTags.length === 0) {
+                    result.push(self.fieldSets[index]);
+                }
+            }
+
+            return result;
         }
     };
 
@@ -520,6 +542,6 @@
     SudokuCatalogue.init.prototype = SudokuCatalogue.prototype;
 
     global.SudokuCatalogue = global.$udokuCatalogue = SudokuCatalogue;
-})(window);
+})(window, _);
 
 

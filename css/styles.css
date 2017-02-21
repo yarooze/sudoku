@@ -1,5 +1,9 @@
 .gameField {
-/*  border: 1px solid #000000; */    
+/*  border: 1px solid #000000; */
+}
+
+#sukoPic {
+  text-align: center;
 }
 
 input {
