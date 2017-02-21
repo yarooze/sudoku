@@ -51,7 +51,7 @@
       self.board.topLeft.y = firstBlackDot.y;
       // find the end of the black line
       nextWhiteDot = self.findNextWithColor(firstBlackDot.x, firstBlackDot.y, 'white', false);
-      
+
       if (nextWhiteDot !== null) { // there is a white space after. Check for 'Gattai5'
           whitespace.start = nextWhiteDot.x;
           lastBlackDot.x = nextWhiteDot.x - 1;
@@ -100,19 +100,19 @@
       // Gattai 5 - two black horizontal lines "--- ---"
       if (whitespace.length > 0) {
           var twoFields = lastBlackDot.x - firstBlackDot.x - whitespace.length;
-          if (Math.round(whitespace.length / 10) == Math.round(twoFields / 60)) {
+          if (Math.abs(Math.round(whitespace.length / 10) - Math.round(twoFields / 60)) < 2 ) {
               self.board.type = 'gattai5';
               self.board.fieldSize = Math.round(twoFields / 18);
           }
-// console.log({
-//     paneles: '',
-//     both: twoFields,
-//     one: Math.round(twoFields / 20),
-//     space: Math.round(whitespace.length / 10),
-//     row:  Math.round(twoFields / 60),
-//     'whitespace_length': whitespace.length / 10,
-//     'twoFields': twoFields / 60
-// });
+console.log({
+    paneles: '',
+    both: twoFields,
+    one: Math.round(twoFields / 20),
+    space: Math.round(whitespace.length / 10),
+    row:  Math.round(twoFields / 60),
+    'whitespace_length': whitespace.length / 10,
+    'twoFields': twoFields / 60
+});
       }
 
       // Get field from the catalogue
