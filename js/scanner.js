@@ -51,6 +51,7 @@
       self.board.topLeft.y = firstBlackDot.y;
       // find the end of the black line
       nextWhiteDot = self.findNextWithColor(firstBlackDot.x, firstBlackDot.y, 'white', false);
+      
       if (nextWhiteDot !== null) { // there is a white space after. Check for 'Gattai5'
           whitespace.start = nextWhiteDot.x;
           lastBlackDot.x = nextWhiteDot.x - 1;
@@ -95,20 +96,22 @@
       if (whitespace.end !== null) {
           whitespace.length = whitespace.end - whitespace.start;
       }
-
+// console.log('whitespace', whitespace);
       // Gattai 5 - two black horizontal lines "--- ---"
       if (whitespace.length > 0) {
           var twoFields = lastBlackDot.x - firstBlackDot.x - whitespace.length;
-          if (parseInt(whitespace.length / 10, 10) == parseInt(twoFields / 60, 10)) {
+          if (Math.round(whitespace.length / 10) == Math.round(twoFields / 60)) {
               self.board.type = 'gattai5';
-              self.board.fieldSize = parseInt(twoFields / 18, 10);
+              self.board.fieldSize = Math.round(twoFields / 18);
           }
 // console.log({
 //     paneles: '',
 //     both: twoFields,
-//     one: parseInt(twoFields / 20, 10),
-//     space: parseInt(whitespace.length / 10, 10),
-//     row:  parseInt(twoFields / 60, 10),
+//     one: Math.round(twoFields / 20),
+//     space: Math.round(whitespace.length / 10),
+//     row:  Math.round(twoFields / 60),
+//     'whitespace_length': whitespace.length / 10,
+//     'twoFields': twoFields / 60
 // });
       }
 
@@ -124,7 +127,7 @@
             x2: startX + self.board.fieldSize,
             y2: startY + self.board.fieldSize
       };
-console.log('zone', zone);
+// console.log('zone', zone);
       var firstWhitePic = self.findNextWithColor(startX, startY, 'white', true, zone);
       var nextBlackPic = self.findNextWithColor(firstWhitePic.x, firstWhitePic.y, 'black', false);
       var width = nextBlackPic.x - firstWhitePic.x;
@@ -289,12 +292,12 @@ console.log(
   self.picHasColor(x1+(width/2), y2, 'black'),
   self.picHasColor(x2, y2, 'black')
 );
-self.rect(x1, y1,1,1, 'red');
-self.rect(x1+(width/2), y1,1,1, 'blue');
-self.rect(x2, y1,1,1, 'cyan');
-self.rect(x1, y2,1,1, 'yellow');
-self.rect(x1+(width/2), y2,1,1, 'magenta');
-self.rect(x2, y2,1,1, 'red');
+//self.rect(x1, y1,1,1, 'red');
+//self.rect(x1+(width/2), y1,1,1, 'blue');
+//self.rect(x2, y1,1,1, 'cyan');
+//self.rect(x1, y2,1,1, 'yellow');
+//self.rect(x1+(width/2), y2,1,1, 'magenta');
+//self.rect(x2, y2,1,1, 'red');
 
         //self.picHasColor(x, startY, 'white')
 // throw 'XxX!';
