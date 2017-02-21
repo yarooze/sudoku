@@ -144,16 +144,16 @@ console.log('zone', zone);
 // debug stuff - draw some lines
 console.log('x', cell, firstWhitePic, nextBlackPic);
 
-var colNumber = $ukoScan.board.field.fieldSet.length;
+var colNumber = self.board.field.fieldSet.length;
 var fieldSetWidth = self.board.buttomRight.x - self.board.topLeft.x;
 var fieldSize = fieldSetWidth / colNumber;
 
-self.rect(cell.x1, cell.y1, cell.width, cell.height);
-self.line(self.board.topLeft.x, self.board.topLeft.y, self.board.buttomRight.x, self.board.topLeft.y);
-self.line(self.board.buttomRight.x, self.board.topLeft.y, self.board.buttomRight.x, self.board.buttomRight.y);
-self.line(self.board.topLeft.x, self.board.buttomRight.y, self.board.buttomRight.x, self.board.buttomRight.y);
-self.line(self.board.topLeft.x, self.board.topLeft.y, self.board.buttomRight.x, self.board.buttomRight.y);
-self.line(self.board.topLeft.x, self.board.buttomRight.y, self.board.buttomRight.x, self.board.topLeft.y);
+// self.rect(cell.x1, cell.y1, cell.width, cell.height);
+// self.line(self.board.topLeft.x, self.board.topLeft.y, self.board.buttomRight.x, self.board.topLeft.y);
+// self.line(self.board.buttomRight.x, self.board.topLeft.y, self.board.buttomRight.x, self.board.buttomRight.y);
+// self.line(self.board.topLeft.x, self.board.buttomRight.y, self.board.buttomRight.x, self.board.buttomRight.y);
+// self.line(self.board.topLeft.x, self.board.topLeft.y, self.board.buttomRight.x, self.board.buttomRight.y);
+// self.line(self.board.topLeft.x, self.board.buttomRight.y, self.board.buttomRight.x, self.board.topLeft.y);
 
 // field width / cell number  <-- field size
 // field width / cell number * 0.5 <-- middle of the field
@@ -163,23 +163,39 @@ self.line(self.board.topLeft.x, self.board.buttomRight.y, self.board.buttomRight
 // let's find the middles of the cells
 for (var colIndex = 0; colIndex < colNumber; colIndex++) {
   for (var rowIndex = 0; rowIndex < colNumber; rowIndex++) {
+    var rowKeys = Object.keys(self.board.field.fieldSet[rowIndex]);
 
   // debug - show middles
-  self.rect(
-    self.board.topLeft.x + fieldSize/2 + fieldSize*colIndex,
-    self.board.topLeft.y + fieldSize/2 + fieldSize*rowIndex,
-    1, 1
-  );
+  // self.rect(
+  //   self.board.topLeft.x + fieldSize/2 + fieldSize*colIndex,
+  //   self.board.topLeft.y + fieldSize/2 + fieldSize*rowIndex,
+  //   1, 1
+  // );
 
   // let's find the letter
   var zone = {
-    x: (self.board.topLeft.x + fieldSize/2 + fieldSize*colIndex) - (cell.width * 0.3),
-    y: (self.board.topLeft.y + fieldSize/2 + fieldSize*rowIndex) - (cell.height * 0.3),
-    width: cell.width * 0.6,
-    height: cell.height * 0.6
+    x1: (self.board.topLeft.x + fieldSize/2 + fieldSize*colIndex) - (cell.width * 0.1),
+    y1: (self.board.topLeft.y + fieldSize/2 + fieldSize*rowIndex) - (cell.height * 0.2),
+    x2: (self.board.topLeft.x + fieldSize/2 + fieldSize*colIndex) + (cell.width * 0.1),
+    y2: (self.board.topLeft.y + fieldSize/2 + fieldSize*rowIndex) + (cell.height * 0.2),
+    found: false,
+    value: null,
+    isEmpty: true
   };
+// console.log(zone);
   self.findLetterZone(zone);
 
+// console.log(rowIndex, colIndex, rowKeys, self.board.field.fieldSet);
+
+  self.board.field.fieldSet[rowIndex][rowKeys[colIndex]].zone = {
+    x1: zone.x1,
+    y1: zone.y1,
+    x2: zone.x2,
+    y2: zone.y2,
+    value: zone.value,
+    isEmpty: true
+  };
+// break;
   }
 }
 
@@ -208,18 +224,105 @@ for (var colIndex = 0; colIndex < colNumber; colIndex++) {
    */
   findLetterZone: function findLetterZone(zone) {
     var self = this;
-    self.rect(zone.x, zone.y, zone.width, zone.height);
-    // scan borders: if only white - try to reduce, other way increase. Then scan once more.
-    console.log(scanLine(zone.x, zone.y, zone.x+zone.width, zone.y));
 
-    function scanLine(startX, startY, endX, endY) {
+    // console.log(zone);
+
+    // scan borders: if only white - try to reduce, other way increase. Then scan once more.
+//self.rect(zone.x1-2, zone.y1-2, zone.x2 - zone.x1+4, zone.y2 - zone.y1+4);
+    var tmp = 50;
+    while (zone.found === false) {
+      zone.found = true;
+// console.log(zone);
+      //  top ---
+      if(lineHasBlackDots(zone.x1, zone.y1, zone.x2, null)) {
+        --zone.y1;
+        zone.found = false;
+        zone.isEmpty = false;
+      }
+      // left |
+      if(lineHasBlackDots(zone.x1, zone.y1, null, zone.y2)) {
+        --zone.x1;
+        zone.found = false;
+        zone.isEmpty = false;
+      }
+      // buttom ---
+      if(lineHasBlackDots(zone.x1, zone.y2, zone.x2, null)) {
+        ++zone.y2;
+        zone.found = false;
+        zone.isEmpty = false;
+      }
+      // right |
+      if(lineHasBlackDots(zone.x2, zone.y1, null, zone.y2)) {
+        ++zone.x2;
+        zone.found = false;
+        zone.isEmpty = false;
+      }
+      if (tmp < 1) {
+        console.error(zone);
+        throw "endless loop? " + tmp;
+      }
+      --tmp;
+    }
+
+
+
+self.rect(zone.x1, zone.y1, zone.x2 - zone.x1, zone.y2 - zone.y1);
+
+  if (zone.isEmpty === false) {
+    zone.value = 'value will be here';
+    getZoneSignature(zone);
+  }
+
+    function getZoneSignature(zone) {
+      var width = zone.x2-zone.x1;
+      var height = zone.y2-zone.y1;
+      var x1 = zone.x1+1;
+      var x2 = zone.x2-1;
+      var y1 = zone.y1+1;
+      var y2 = zone.y2-1;
+
+console.log(
+  self.picHasColor(x1, y1, 'black'),
+  self.picHasColor(x1+(width/2), y1, 'black'),
+  self.picHasColor(x2, y1, 'black'),
+  self.picHasColor(x1, y2, 'black'),
+  self.picHasColor(x1+(width/2), y2, 'black'),
+  self.picHasColor(x2, y2, 'black')
+);
+self.rect(x1, y1,1,1, 'red');
+self.rect(x1+(width/2), y1,1,1, 'blue');
+self.rect(x2, y1,1,1, 'cyan');
+self.rect(x1, y2,1,1, 'yellow');
+self.rect(x1+(width/2), y2,1,1, 'magenta');
+self.rect(x2, y2,1,1, 'red');
+
+        //self.picHasColor(x, startY, 'white')
+// throw 'XxX!';
+    }
+
+    function lineHasBlackDots(startX, startY, endX, endY) {
       var whitePicos = [];
-      for(var x = startX; x<endX; x++) {
-        whitePicos.push(self.picHasColor(x, startY, 'white'));
+
+      if (endX !== null) {
+        for(var x = startX; x<endX; x++) {
+          whitePicos.push(self.picHasColor(x, startY, 'white'));
+        }
+      } else if (endY !== null) {
+        for(var y = startY; y<endY; y++) {
+          whitePicos.push(self.picHasColor(startX, y, 'white'));
+        }
+      } else {
+        // ??
       }
 
-      return -1  === whitePicos.indexOf(false);
+      // if (-1  !== whitePicos.indexOf(false)) {
+      // console.log(whitePicos);
+      // }
+
+      return -1  !== whitePicos.indexOf(false);
     }
+
+    // self.rect(zone.x1, zone.y1, zone.x2 - zone.x1, zone.y2 - zone.y1);
   },
     /**
      * wrapper for console.log()
@@ -231,10 +334,10 @@ for (var colIndex = 0; colIndex < colNumber; colIndex++) {
         }
         return this;
     },
-    rect: function rect(x1, y1, x2, y2) {
+    rect: function rect(x1, y1, x2, y2, color) {
       var self = this;
       self.context.lineWidth="1";
-      self.context.strokeStyle="red";
+      self.context.strokeStyle = color || "red";
       self.context.rect(x1, y1, x2, y2);
       self.context.stroke();
     },
