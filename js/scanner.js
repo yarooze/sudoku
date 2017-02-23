@@ -164,9 +164,9 @@ var fieldSize = fieldSetWidth / colNumber;
 // $ukoScan.rect((225/9/2)+(225/9)*0,(225/9/2)+(225/9)*3,2,2)
 
 // let's find the middles of the cells
-for (var colIndex = 0; colIndex < colNumber; colIndex++) {
-  for (var rowIndex = 0; rowIndex < colNumber; rowIndex++) {
-    var rowKeys = Object.keys(self.board.field.fieldSet[rowIndex]);
+for (var rowIndex = 0; rowIndex < colNumber; rowIndex++) {
+  var rowKeys = Object.keys(self.board.field.fieldSet[rowIndex]);
+  for (var colIndex = 0; colIndex < colNumber; colIndex++) {
 
   // debug - show middles
   // self.rect(
@@ -269,38 +269,113 @@ for (var colIndex = 0; colIndex < colNumber; colIndex++) {
 
 
 
-self.rect(zone.x1, zone.y1, zone.x2 - zone.x1, zone.y2 - zone.y1);
+ //self.rect(zone.x1, zone.y1, zone.x2 - zone.x1, zone.y2 - zone.y1);
 
   if (zone.isEmpty === false) {
-    zone.value = 'value will be here';
-    getZoneSignature(zone);
+    zone.value = decodeNumberFromSignature(getZoneSignature(zone));
+console.log(zone.value);
   }
 
     function getZoneSignature(zone) {
       var width = zone.x2-zone.x1;
       var height = zone.y2-zone.y1;
-      var x1 = zone.x1+1;
-      var x2 = zone.x2-1;
-      var y1 = zone.y1+1;
-      var y2 = zone.y2-1;
+      var x1 = zone.x1+2;
+      var x2 = zone.x2-2;
+      var y1 = zone.y1+2;
+      var y2 = zone.y2-2;
 
-console.log(
-  self.picHasColor(x1, y1, 'black'),
-  self.picHasColor(x1+(width/2), y1, 'black'),
-  self.picHasColor(x2, y1, 'black'),
-  self.picHasColor(x1, y2, 'black'),
-  self.picHasColor(x1+(width/2), y2, 'black'),
-  self.picHasColor(x2, y2, 'black')
-);
-//self.rect(x1, y1,1,1, 'red');
-//self.rect(x1+(width/2), y1,1,1, 'blue');
-//self.rect(x2, y1,1,1, 'cyan');
-//self.rect(x1, y2,1,1, 'yellow');
-//self.rect(x1+(width/2), y2,1,1, 'magenta');
-//self.rect(x2, y2,1,1, 'red');
+      var sigPoints = [
+        {x: x1, y: y1},
+        {x: x1+(width*0.25), y: y1},
+        {x: x1+(width*0.5), y: y1},
+        {x: x1+(width*0.75), y: y1},
+        {x: x2, y: y1},
+
+        {x: x1, y: y1+(height*0.25)},
+        {x: x1+(width*0.25), y: y1+(height*0.25)},
+        {x: x1+(width*0.5), y: y1+(height*0.25)},
+        {x: x1+(width*0.75), y: y1+(height*0.25)},
+        {x: x2, y: y1+(height*0.25)},
+
+        {x: x1, y: y1+(height*0.5)},
+        {x: x1+(width*0.25), y: y1+(height*0.5)},
+        {x: x1+(width*0.5), y: y1+(height*0.5)},
+        {x: x1+(width*0.75), y: y1+(height*0.5)},
+        {x: x2, y: y1+(height*0.5)},
+
+        {x: x1, y: y1+(height*0.75)},
+        {x: x1+(width*0.25), y: y1+(height*0.75)},
+        {x: x1+(width*0.5), y: y1+(height*0.75)},
+        {x: x1+(width*0.75), y: y1+(height*0.75)},
+        {x: x2, y: y1+(height*0.75)},
+
+        {x: x1, y: y2},
+        {x: x1+(width*0.25), y: y2},
+        {x: x1+(width*0.5), y: y2},
+        {x: x1+(width*0.75), y: y2},
+        {x: x2, y: y2}
+      ];
+
+      var signature = [];
+      for(var index = 0; index<sigPoints.length; index++) {
+        sigPoints[index].isBlack = self.picHasColor(sigPoints[index].x, sigPoints[index].y, 'black');
+        signature[index] = self.picHasColor(sigPoints[index].x, sigPoints[index].y, 'black');
+      }
+// console.log(
+//   signature,
+//   // zone,
+//   // sigPoints
+//   // self.picHasColor(sigPoints[0].x, sigPoints[0].y, 'black'),
+//   // self.picHasColor(sigPoints[1].x, sigPoints[1].y, 'black'),
+//   // self.picHasColor(sigPoints[2].x, sigPoints[2].y, 'black'),
+//   // self.picHasColor(sigPoints[3].x, sigPoints[3].y, 'black'),
+//   // self.picHasColor(sigPoints[4].x, sigPoints[4].y, 'black'),
+//   // self.picHasColor(sigPoints[5].x, sigPoints[5].y, 'black')
+// );
+
+for(var index = 0; index<sigPoints.length; index++) {
+  self.rect(sigPoints[index].x, sigPoints[index].y, 1,1, 'blue');
+}
+// self.rect(sigPoints[0].x, sigPoints[0].y, 1,1, 'blue');
+// self.rect(sigPoints[1].x, sigPoints[1].y, 1,1, 'blue');
+// self.rect(sigPoints[2].x, sigPoints[2].y, 1,1, 'blue');
+
+// self.rect(sigPoints[3].x, sigPoints[3].y, 1,1, 'blue');
+// self.rect(sigPoints[4].x, sigPoints[4].y, 1,1, 'blue');
+// self.rect(sigPoints[5].x, sigPoints[5].y, 1,1, 'blue');
+
+
+console.log(signature);
+
+  return signature;
 
         //self.picHasColor(x, startY, 'white')
 // throw 'XxX!';
+
+    }
+
+    function decodeNumberFromSignature(signature) {
+      var number = null;
+
+      if (isNumberOne(signature)) {
+        number = 1;
+      }
+
+      return number;
+    }
+
+    function isNumberOne(signature) {
+      if (
+        signature[2] === true &&
+        signature[7] === true &&
+        signature[12] === true &&
+        signature[17] === true &&
+        signature[22] === true
+        ) {
+          return true;
+      }
+
+      return false;
     }
 
     function lineHasBlackDots(startX, startY, endX, endY) {
