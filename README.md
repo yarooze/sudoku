@@ -27,4 +27,4 @@ Planned:
 You can make your own fields and add them into app.js.
 
 
-Demo here: http://pico.zz.mu/sudoku/index.html
+Demo here: http://htmlpreview.github.io/?https://github.com/yarooze/sudoku/blob/master/index.html
