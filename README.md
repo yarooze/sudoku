@@ -28,4 +28,6 @@ You can make your own fields and add them into app.js.
 
 
 Demo here: http://yarooze.github.io/sudoku/
+
+
 or here:   http://htmlpreview.github.io/?https://github.com/yarooze/sudoku/blob/master/index.html
